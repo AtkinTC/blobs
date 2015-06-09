@@ -1,0 +1,99 @@
+import pygame, math
+from pygame.locals import *
+import time
+from random import randint
+
+#p_dict = {(150,120):1, (170,120):1}
+#p_list = [(50,120, 0),(170,120, math.pi/2)]
+
+pygame.init()
+size = w, h = 320, 240
+screen = pygame.display.set_mode(size)
+
+p_list = []
+
+num = 8
+for i in range(num):
+  x = randint(0,w)
+  y = randint(0,h)
+  a = randint(0,360)*2*math.pi/260.0
+  p_list.append((x,y,a))
+
+done = False
+while not done:
+  for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+      done = True
+
+  """
+  e_list = []
+  for x in range(w):
+    for y in range(h):
+      #pos = x*h+y
+      e = 1
+      for p in p_list:
+        dist_sqr = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
+        e *= 1.0 - (1.0/(dist_sqr+1.0))
+      e = 200.0 - e*200.0
+      if e < 0:
+        e = 0
+      if e > 10:
+        pygame.draw.line(screen, (0, e+50, 0), (x,y), (x,y))
+      e_list.append(e)
+  """
+
+  e_list = [1.0]*w*h
+
+  bound = 40
+  for p in p_list:
+    px = int(p[0])
+    py = int(p[1])
+    for x in range(max(0,px-bound), min(w,px+bound)):
+      for y in range(max(0,py-bound), min(h,py+bound)):
+        dist = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
+        i_dist = 1.0-(max(float(bound) - dist, 0.0)/float(bound))
+        e_list[x*h+y] *= i_dist
+ 
+  for x in range(w):
+    for y in range(h):
+      i = x*h+y
+      #print i, ': ', e_list[i]
+      #time.sleep(0.005)
+      #e_list[i] = pow(e_list[i]
+      #e_list[i] = 255 - e_list[i]*230
+      #e_list[i] = 255*e_list[i]
+      #e_list[i] = pow(2*e_list[i],2)/4
+      e_list[i] = int(255*(1-e_list[i]))
+
+      if e_list[i] > 200:
+        pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
+      elif e_list[i] > 150:
+        pygame.draw.line(screen, (0, 150, 0), (x,y), (x,y))
+      elif e_list[i] > 60:
+        pygame.draw.line(screen, (0, 60, 0), (x,y), (x,y))
+
+  s = 4           
+  for i in range(len(p_list)):
+    p = p_list[i]
+    #pygame.draw.circle(screen, (200,100,100), (int(p[0]),int(p[1])), 2)
+    p = p[0]+s*math.cos(p[2]), p[1]+s*math.sin(p[2]), p[2]
+    if (p[0] < 0 and math.cos(p[2]) < 0) or (p[0] > w and math.cos(p[2]) > 0):
+      x = math.cos(p[2])
+      y = math.sin(p[2])
+      a = math.atan2(y,-x)
+      p = p[0],p[1],a
+
+    if (p[1] < 0 and math.sin(p[2]) < 0) or (p[1] > h and math.sin(p[2]) > 0):
+      x = math.cos(p[2])
+      y = math.sin(p[2])
+      a = math.atan2(-y,x)
+      p = p[0],p[1],a
+
+    p_list[i] = p
+
+  #done = True
+  pygame.display.flip()
+  screen.fill(0)
+  #time.sleep(0.01)		
+pygame.quit()
+			
