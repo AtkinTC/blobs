@@ -64,49 +64,49 @@ def single_pass(p, bound = 30):
     miny = max(0,py-bound)
     #miny = miny + 2 - (miny % 3)
     for x in range(minx, min(w,px+bound)):
-        for y in range(miny, min(h,py+bound)):
-            dist = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
-            i_dist = 1.0-(max(float(bound) - dist, 0.0)/float(bound))
-            levels[x*h+y] *= i_dist
+      for y in range(miny, min(h,py+bound)):
+        dist = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
+        i_dist = 1.0-(max(float(bound) - dist, 0.0)/float(bound))
+        levels[x*h+y] *= i_dist
 
 @timeme
 def draw_levels(screen):
-   for x in range(w):
-        for y in range(h):
-            i = x*h+y
-            levels[i] = int(255*(1-levels[i]))
-            
-            if levels[i] > 200:
-                pygame.draw.line(screen, (0, 250, 0), (x,y), (x,y))
-            elif levels[i] > 150:
-                pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
-            #elif levels2[i] > 150:
-            #    pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
-            elif levels[i] > 40:
-                pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
-            #elif levels2[i] > 40:
-            #    pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
+	for x in range(w):
+    for y in range(h):
+      i = x*h+y
+      levels[i] = int(255*(1-levels[i]))
+      
+      if levels[i] > 200:
+        pygame.draw.line(screen, (0, 250, 0), (x,y), (x,y))
+      elif levels[i] > 150:
+        pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
+      #elif levels2[i] > 150:
+      #  pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
+      elif levels[i] > 40:
+        pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
+      #elif levels2[i] > 40:
+      #  pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
 
 
 def animate():
-    s = 5
-    global p_list
-    for i in range(len(p_list)):
-        p = p_list[i]
-        p = p[0]+s*math.cos(p[2]), p[1]+s*math.sin(p[2]), p[2]
-        if (p[0] < 0 and math.cos(p[2]) < 0) or (p[0] > w and math.cos(p[2]) > 0):
-            x = math.cos(p[2])
-            y = math.sin(p[2])
-            a = math.atan2(y,-x)
-            p = p[0],p[1],a
+  s = 5
+  global p_list
+  for i in range(len(p_list)):
+    p = p_list[i]
+    p = p[0]+s*math.cos(p[2]), p[1]+s*math.sin(p[2]), p[2]
+    if (p[0] < 0 and math.cos(p[2]) < 0) or (p[0] > w and math.cos(p[2]) > 0):
+      x = math.cos(p[2])
+      y = math.sin(p[2])
+      a = math.atan2(y,-x)
+      p = p[0],p[1],a
 
-        if (p[1] < 0 and math.sin(p[2]) < 0) or (p[1] > h and math.sin(p[2]) > 0):
-            x = math.cos(p[2])
-            y = math.sin(p[2])
-            a = math.atan2(-y,x)
-            p = p[0],p[1],a
+    if (p[1] < 0 and math.sin(p[2]) < 0) or (p[1] > h and math.sin(p[2]) > 0):
+      x = math.cos(p[2])
+      y = math.sin(p[2])
+      a = math.atan2(-y,x)
+      p = p[0],p[1],a
 
-        p_list[i] = p
+    p_list[i] = p
 
 #testing
 done = False
