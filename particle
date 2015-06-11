@@ -11,89 +11,133 @@ size = w, h = 320, 240
 screen = pygame.display.set_mode(size)
 
 p_list = []
+levels = [1.0]*w*h
 
-num = 8
-for i in range(num):
-  x = randint(0,w)
-  y = randint(0,h)
-  a = randint(0,360)*2*math.pi/260.0
-  p_list.append((x,y,a))
+times = {}
+def timeme(method):
+  def wrapper(*args, **kw):
+    global times
+    startTime = time.time() * 1000
+    result = method(*args, **kw)
+    endTime = time.time() * 1000
 
-done = False
-while not done:
-  for event in pygame.event.get():
-    if event.type == pygame.QUIT:
-      done = True
+    
+    if method.__name__ not in times:
+      times[method.__name__] = (endTime-startTime, 1)
+    else:
+      t, c = times[method.__name__]
+      times[method.__name__] = (t*c+(endTime-startTime))/(c+1), c+1
+    
+    #print (endTime-startTime, 'ms')
+    return result
+  return wrapper
 
-  """
-  e_list = []
-  for x in range(w):
-    for y in range(h):
-      #pos = x*h+y
-      e = 1
-      for p in p_list:
-        dist_sqr = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
-        e *= 1.0 - (1.0/(dist_sqr+1.0))
-      e = 200.0 - e*200.0
-      if e < 0:
-        e = 0
-      if e > 10:
-        pygame.draw.line(screen, (0, e+50, 0), (x,y), (x,y))
-      e_list.append(e)
-  """
+def init():
+  global times, p_list, levels
+  p_list = []
+  levels = [1.0]*w*h
+  times = {}
 
-  e_list = [1.0]*w*h
+def generate(count = 1):
+	global p_list
+	for i in range(num):
+	  x = randint(0,w)
+	  y = randint(0,h)
+	  a = randint(0,360)*2*math.pi/360.0
+	  p_list.append((x,y,a))
 
-  bound = 40
-  for p in p_list:
+@timeme
+def full_pass(bound = 30):
+    global levels
+    for p in p_list:
+        single_pass(p, bound)
+
+
+def single_pass(p, bound = 30):
+    global levels
     px = int(p[0])
     py = int(p[1])
-    for x in range(max(0,px-bound), min(w,px+bound)):
-      for y in range(max(0,py-bound), min(h,py+bound)):
-        dist = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
-        i_dist = 1.0-(max(float(bound) - dist, 0.0)/float(bound))
-        e_list[x*h+y] *= i_dist
- 
-  for x in range(w):
-    for y in range(h):
-      i = x*h+y
-      #print i, ': ', e_list[i]
-      #time.sleep(0.005)
-      #e_list[i] = pow(e_list[i]
-      #e_list[i] = 255 - e_list[i]*230
-      #e_list[i] = 255*e_list[i]
-      #e_list[i] = pow(2*e_list[i],2)/4
-      e_list[i] = int(255*(1-e_list[i]))
+    minx = max(0,px-bound)
+    #step = 3
+    minx = max(0,px-bound)
+    #minx = minx + 2 - (minx % 3)
+    miny = max(0,py-bound)
+    #miny = miny + 2 - (miny % 3)
+    for x in range(minx, min(w,px+bound)):
+        for y in range(miny, min(h,py+bound)):
+            dist = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
+            i_dist = 1.0-(max(float(bound) - dist, 0.0)/float(bound))
+            levels[x*h+y] *= i_dist
 
-      if e_list[i] > 200:
-        pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
-      elif e_list[i] > 150:
-        pygame.draw.line(screen, (0, 150, 0), (x,y), (x,y))
-      elif e_list[i] > 60:
-        pygame.draw.line(screen, (0, 60, 0), (x,y), (x,y))
+@timeme
+def draw_levels(screen):
+   for x in range(w):
+        for y in range(h):
+            i = x*h+y
+            levels[i] = int(255*(1-levels[i]))
+            
+            if levels[i] > 200:
+                pygame.draw.line(screen, (0, 250, 0), (x,y), (x,y))
+            elif levels[i] > 150:
+                pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
+            #elif levels2[i] > 150:
+            #    pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
+            elif levels[i] > 40:
+                pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
+            #elif levels2[i] > 40:
+            #    pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
 
-  s = 4           
-  for i in range(len(p_list)):
-    p = p_list[i]
-    #pygame.draw.circle(screen, (200,100,100), (int(p[0]),int(p[1])), 2)
-    p = p[0]+s*math.cos(p[2]), p[1]+s*math.sin(p[2]), p[2]
-    if (p[0] < 0 and math.cos(p[2]) < 0) or (p[0] > w and math.cos(p[2]) > 0):
-      x = math.cos(p[2])
-      y = math.sin(p[2])
-      a = math.atan2(y,-x)
-      p = p[0],p[1],a
 
-    if (p[1] < 0 and math.sin(p[2]) < 0) or (p[1] > h and math.sin(p[2]) > 0):
-      x = math.cos(p[2])
-      y = math.sin(p[2])
-      a = math.atan2(-y,x)
-      p = p[0],p[1],a
+def animate():
+    s = 5
+    global p_list
+    for i in range(len(p_list)):
+        p = p_list[i]
+        p = p[0]+s*math.cos(p[2]), p[1]+s*math.sin(p[2]), p[2]
+        if (p[0] < 0 and math.cos(p[2]) < 0) or (p[0] > w and math.cos(p[2]) > 0):
+            x = math.cos(p[2])
+            y = math.sin(p[2])
+            a = math.atan2(y,-x)
+            p = p[0],p[1],a
 
-    p_list[i] = p
+        if (p[1] < 0 and math.sin(p[2]) < 0) or (p[1] > h and math.sin(p[2]) > 0):
+            x = math.cos(p[2])
+            y = math.sin(p[2])
+            a = math.atan2(-y,x)
+            p = p[0],p[1],a
 
-  #done = True
-  pygame.display.flip()
-  screen.fill(0)
-  #time.sleep(0.01)		
+        p_list[i] = p
+
+#testing
+done = False
+stage = 0
+
+while stage < 8 and not done:
+  stage += 1
+  loops = 0
+
+  init()
+  generate(4)
+  while not done and loops < 40:
+    loops += 1
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        done = True
+
+    #levels2 = levels
+    levels = [1.0]*w*h
+
+
+    full_pass(stage*10)
+                
+    draw_levels(screen)
+
+    animate()
+    
+    #done = True
+    pygame.display.flip()
+    screen.fill(0)
+    #time.sleep(0.05)
+
+  print stage, '; ', times
 pygame.quit()
-			
