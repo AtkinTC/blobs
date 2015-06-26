@@ -13,7 +13,9 @@ screen = pygame.display.set_mode(size)
 p_list = []
 levels = [1.0]*w*h
 
+
 times = {}
+#timing wrapper, records all times in a global dictionary organized by function name
 def timeme(method):
   def wrapper(*args, **kw):
     global times
@@ -38,6 +40,7 @@ def init():
   levels = [1.0]*w*h
   times = {}
 
+#generates a number of particles at random positions
 def generate(count = 1):
 	global p_list
 	for i in range(num):
@@ -46,6 +49,7 @@ def generate(count = 1):
 	  a = randint(0,360)*2*math.pi/360.0
 	  p_list.append((x,y,a))
 
+#calculates effects for each particle
 @timeme
 def full_pass(bound = 30):
     global levels
@@ -53,22 +57,26 @@ def full_pass(bound = 30):
         single_pass(p, bound)
 
 
+#calculates effect from a single particle
+#applied within a bounded area to reduce unneccessary colculations
+#effect calculations make use of the bounded area size to avoid interference
 def single_pass(p, bound = 30):
     global levels
     px = int(p[0])
     py = int(p[1])
     minx = max(0,px-bound)
-    #step = 3
-    minx = max(0,px-bound)
-    #minx = minx + 2 - (minx % 3)
     miny = max(0,py-bound)
-    #miny = miny + 2 - (miny % 3)
+
     for x in range(minx, min(w,px+bound)):
       for y in range(miny, min(h,py+bound)):
+        #not much reason put into these calculations, but it suits my purpose for it
+        #low distance lowers the total level, high distance doesn't raise the total level
         dist = pow(pow(p[0]-x,2)+pow(p[1]-y,2),0.5)
         i_dist = 1.0-(max(float(bound) - dist, 0.0)/float(bound))
         levels[x*h+y] *= i_dist
 
+
+#fills the screen based on calculated levels
 @timeme
 def draw_levels(screen):
 	for x in range(w):
@@ -80,14 +88,10 @@ def draw_levels(screen):
         pygame.draw.line(screen, (0, 250, 0), (x,y), (x,y))
       elif levels[i] > 150:
         pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
-      #elif levels2[i] > 150:
-      #  pygame.draw.line(screen, (0, 200, 0), (x,y), (x,y))
       elif levels[i] > 40:
         pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
-      #elif levels2[i] > 40:
-      #  pygame.draw.line(screen, (0, 100, 0), (x,y), (x,y))
 
-
+#applies movement to all particles
 def animate():
   s = 5
   global p_list
@@ -112,19 +116,22 @@ def animate():
 done = False
 stage = 0
 
+#testing the effects of increased bound size for full_pass()
 while stage < 8 and not done:
   stage += 1
   loops = 0
 
+  #initialize the test, clearing out previous data
   init()
   generate(4)
+  
+  #run a set number of frames
   while not done and loops < 40:
     loops += 1
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         done = True
 
-    #levels2 = levels
     levels = [1.0]*w*h
 
 
@@ -134,10 +141,10 @@ while stage < 8 and not done:
 
     animate()
     
-    #done = True
     pygame.display.flip()
     screen.fill(0)
     #time.sleep(0.05)
 
+  #print rhe timing results of the current stage
   print stage, '; ', times
 pygame.quit()
